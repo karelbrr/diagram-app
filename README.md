@@ -1,3 +1,5 @@
+# [IN PROGRESS]
+
 # Diagram App
 
 A modern web application for creating, editing, and managing diagrams. Built with Next.js, Zustand, and Konva.
