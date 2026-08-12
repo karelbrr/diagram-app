@@ -54,12 +54,16 @@ const ToolButton = ({
 };
 
 export function LeftBar() {
-  const { activeTool, setActiveTool, selectedShapeId, shapes, updateShape, saveHistory } = useAppStore();
-  const selectedShape = shapes.find(s => s.id === selectedShapeId);
+  const { activeTool, setActiveTool, selectedShapeIds, shapes, updateShape, saveHistory } = useAppStore();
+  const selectedShape = selectedShapeIds.length > 0 ? shapes.find(s => s.id === selectedShapeIds[0]) : undefined;
 
   const getHexValue = (color: string) => {
     if (color && color.startsWith("#")) return color;
     return "#ffffff"; // Default fallback for rgba or named colors
+  };
+
+  const handleUpdateMany = (updates: Partial<import("../store/useAppStore").Shape>) => {
+    selectedShapeIds.forEach(id => updateShape(id, updates));
   };
 
   return (
@@ -208,6 +212,11 @@ export function LeftBar() {
                 <div className="text-sm text-zinc-400">Select a shape to edit its properties.</div>
               ) : (
                 <div className="flex flex-col gap-6">
+                  {selectedShapeIds.length > 1 && (
+                    <div className="text-xs text-blue-400 bg-blue-900/30 p-2 rounded border border-blue-800/50">
+                      Multiple shapes selected. Changes will apply to all.
+                    </div>
+                  )}
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-medium text-zinc-300">Fill Color</label>
                     <div className="flex gap-3 items-center bg-zinc-900/50 p-2 rounded-md border border-zinc-800">
@@ -215,7 +224,7 @@ export function LeftBar() {
                         type="color" 
                         value={getHexValue(selectedShape.fill)} 
                         onPointerDown={() => saveHistory()}
-                        onChange={(e) => updateShape(selectedShape.id, { fill: e.target.value })}
+                        onChange={(e) => handleUpdateMany({ fill: e.target.value })}
                         className="w-8 h-8 rounded cursor-pointer bg-transparent border-0 p-0"
                       />
                       <span className="text-sm text-zinc-400 font-mono">{selectedShape.fill}</span>
@@ -229,7 +238,7 @@ export function LeftBar() {
                         type="color" 
                         value={getHexValue(selectedShape.stroke)} 
                         onPointerDown={() => saveHistory()}
-                        onChange={(e) => updateShape(selectedShape.id, { stroke: e.target.value })}
+                        onChange={(e) => handleUpdateMany({ stroke: e.target.value })}
                         className="w-8 h-8 rounded cursor-pointer bg-transparent border-0 p-0"
                       />
                       <span className="text-sm text-zinc-400 font-mono">{selectedShape.stroke}</span>
@@ -247,7 +256,7 @@ export function LeftBar() {
                       max="20" 
                       value={selectedShape.strokeWidth} 
                       onPointerDown={() => saveHistory()}
-                      onChange={(e) => updateShape(selectedShape.id, { strokeWidth: parseInt(e.target.value) })}
+                      onChange={(e) => handleUpdateMany({ strokeWidth: parseInt(e.target.value) })}
                       className="w-full accent-white"
                     />
                   </div>
@@ -264,7 +273,7 @@ export function LeftBar() {
                         max="100" 
                         value={(selectedShape as import("../store/useAppStore").TextShape).fontSize} 
                         onPointerDown={() => saveHistory()}
-                        onChange={(e) => updateShape(selectedShape.id, { fontSize: parseInt(e.target.value) })}
+                        onChange={(e) => handleUpdateMany({ fontSize: parseInt(e.target.value) })}
                         className="w-full accent-white"
                       />
                     </div>

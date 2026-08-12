@@ -11,9 +11,10 @@ import React from "react"
 import { useAppStore } from "../store/useAppStore"
 
 export function EditorContextMenu({ children }: { children: React.ReactNode }) {
-  const { selectedShapeId, removeShape, updateShape, shapes } = useAppStore()
+  const { selectedShapeIds, removeShape, updateShape, shapes, setSelectedShapeIds } = useAppStore()
 
-  const selectedShape = shapes.find((s) => s.id === selectedShapeId)
+  const hasSelection = selectedShapeIds.length > 0;
+  const isAllLocked = selectedShapeIds.every(id => shapes.find(s => s.id === id)?.isLocked);
 
   return (
     <ContextMenu>
@@ -21,18 +22,18 @@ export function EditorContextMenu({ children }: { children: React.ReactNode }) {
         <div className="absolute inset-0">{children}</div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-56 border-zinc-800 bg-black text-zinc-300">
-        {selectedShapeId ? (
+        {hasSelection ? (
           <>
             <ContextMenuGroup>
               <ContextMenuItem
                 className="focus:bg-zinc-800 focus:text-white"
                 onClick={() =>
-                  updateShape(selectedShapeId, {
-                    isLocked: !selectedShape?.isLocked,
-                  })
+                  selectedShapeIds.forEach(id => updateShape(id, {
+                    isLocked: !isAllLocked,
+                  }))
                 }
               >
-                {selectedShape?.isLocked ? "Unlock Shape" : "Lock Shape"}
+                {isAllLocked ? "Unlock Shapes" : "Lock Shapes"}
                 <ContextMenuShortcut>⌘L</ContextMenuShortcut>
               </ContextMenuItem>
             </ContextMenuGroup>
@@ -40,7 +41,10 @@ export function EditorContextMenu({ children }: { children: React.ReactNode }) {
             <ContextMenuGroup>
               <ContextMenuItem
                 className="text-red-500 focus:bg-red-500/20 focus:text-red-500"
-                onClick={() => removeShape(selectedShapeId)}
+                onClick={() => {
+                  selectedShapeIds.forEach(id => removeShape(id));
+                  setSelectedShapeIds([]);
+                }}
               >
                 Delete
                 <ContextMenuShortcut>Del</ContextMenuShortcut>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Group, Rect, Circle, RegularPolygon, Transformer } from "react-konva";
+import { Group, Rect, Circle, RegularPolygon } from "react-konva";
 import { Shape } from "../../store/useAppStore";
 import { useShapeHandlers } from "./use-shape-handlers";
 
@@ -11,7 +11,6 @@ interface BasicShapeProps {
 export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
   const {
     shapeRef,
-    trRef,
     isDraggable,
     isSelected,
     handleSelect,
@@ -135,33 +134,6 @@ export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
             />
           );
         })()}
-      {isSelected && (
-        <Transformer
-          ref={trRef}
-          borderStroke="#ffffff"
-          ignoreStroke={true}
-          borderStrokeWidth={1}
-          anchorSize={10}
-          anchorFill="#ffffff"
-          anchorStroke="#ffffff"
-          anchorStrokeWidth={1}
-          anchorCornerRadius={5}
-          rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
-          boundBoxFunc={(oldBox, newBox) => {
-            if (Math.abs(newBox.width) < 20 || Math.abs(newBox.height) < 20) {
-              return oldBox;
-            }
-            const gridSize = 20;
-            return {
-              ...newBox,
-              x: Math.round(newBox.x / gridSize) * gridSize,
-              y: Math.round(newBox.y / gridSize) * gridSize,
-              width: Math.round(newBox.width / gridSize) * gridSize,
-              height: Math.round(newBox.height / gridSize) * gridSize,
-            };
-          }}
-        />
-      )}
     </Group>
   );
 };

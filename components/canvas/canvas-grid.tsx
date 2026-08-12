@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Stage, Layer, Line } from "react-konva";
+import { useState, useEffect, useRef } from "react";
+import { Stage, Layer, Line, Transformer, Rect } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { getPointerPositionInWorld } from "@/lib/get-pointer-position-in-world";
 import { EditorContextMenu } from "../ui/editor-context-menu";
@@ -15,18 +15,36 @@ export default function CanvasGrid() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentShapeId, setCurrentShapeId] = useState<string | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [selectionBox, setSelectionBox] = useState<{ x: number, y: number, width: number, height: number } | null>(null);
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const trRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stageRef = useRef<any>(null);
+
   const {
     activeTool,
     shapes,
     addShape,
     updateShape,
-    setSelectedShapeId,
+    setSelectedShapeIds,
     setActiveTool,
-    selectedShapeId,
+    selectedShapeIds,
     removeShape,
     undo,
     redo,
   } = useAppStore();
+
+  // Attach nodes to transformer when selection changes
+  useEffect(() => {
+    if (trRef.current && stageRef.current) {
+      const nodes = selectedShapeIds
+        .map(id => stageRef.current.findOne(`#${id}`))
+        .filter(Boolean);
+      trRef.current.nodes(nodes);
+      trRef.current.getLayer().batchDraw();
+    }
+  }, [selectedShapeIds, shapes.length]);
 
   // Handle global keydown events, such as deleting the selected shape
   useEffect(() => {
@@ -50,14 +68,15 @@ export default function CanvasGrid() {
         return;
       }
 
-      if (selectedShapeId && (e.key === "Delete" || e.key === "Backspace")) {
-        removeShape(selectedShapeId);
+      if (selectedShapeIds.length > 0 && (e.key === "Delete" || e.key === "Backspace")) {
+        selectedShapeIds.forEach(id => removeShape(id));
+        setSelectedShapeIds([]);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedShapeId, removeShape, undo, redo]);
+  }, [selectedShapeIds, removeShape, undo, redo]);
 
   // Handle window resize to update stage dimensions
   useEffect(() => {
@@ -122,7 +141,19 @@ export default function CanvasGrid() {
     if (activeTool === "pointer") {
       const clickedOnEmpty = e.target === e.target.getStage();
       if (clickedOnEmpty) {
-        useAppStore.getState().setSelectedShapeId(null);
+        setSelectedShapeIds([]);
+        const stage = e.target.getStage();
+        if (stage) {
+          const worldPos = getPointerPositionInWorld(stage);
+          if (worldPos) {
+            setSelectionBox({
+              x: worldPos.x,
+              y: worldPos.y,
+              width: 0,
+              height: 0,
+            });
+          }
+        }
       }
       return;
     }
@@ -170,14 +201,26 @@ export default function CanvasGrid() {
 
   // Handle updating shape dimensions while drawing
   const handlePointerMove = (e: KonvaEventObject<PointerEvent>) => {
-    if (!isDrawing || !currentShapeId || !drawableTools.includes(activeTool))
-      return;
-
     const stage = e.target.getStage();
     if (!stage) return;
 
     const worldPos = getPointerPositionInWorld(stage);
     if (!worldPos) return;
+
+    if (activeTool === "pointer" && selectionBox) {
+      setSelectionBox((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          width: worldPos.x - prev.x,
+          height: worldPos.y - prev.y,
+        };
+      });
+      return;
+    }
+
+    if (!isDrawing || !currentShapeId || !drawableTools.includes(activeTool))
+      return;
 
     const snappedCurrentX = Math.round(worldPos.x / gridSize) * gridSize;
     const snappedCurrentY = Math.round(worldPos.y / gridSize) * gridSize;
@@ -199,11 +242,29 @@ export default function CanvasGrid() {
   };
 
   // Handle pointer up event to finalize shape drawing
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: KonvaEventObject<PointerEvent>) => {
+    if (activeTool === "pointer" && selectionBox) {
+      const box = {
+        x: Math.min(selectionBox.x, selectionBox.x + selectionBox.width),
+        y: Math.min(selectionBox.y, selectionBox.y + selectionBox.height),
+        width: Math.abs(selectionBox.width),
+        height: Math.abs(selectionBox.height),
+      };
+
+      const shapesInBox = shapes.filter((shape) => {
+        return shape.x >= box.x && shape.x <= box.x + box.width &&
+               shape.y >= box.y && shape.y <= box.y + box.height;
+      });
+      
+      setSelectedShapeIds(shapesInBox.map(s => s.id));
+      setSelectionBox(null);
+      return;
+    }
+
     if (!isDrawing) return;
 
     setIsDrawing(false);
-    setSelectedShapeId(currentShapeId);
+    setSelectedShapeIds([currentShapeId as string]);
     setActiveTool("pointer");
     setCurrentShapeId(null);
   };
@@ -255,6 +316,7 @@ export default function CanvasGrid() {
     <div className={`absolute inset-0 bg-black ${getCursorStyle()}`}>
       <EditorContextMenu>
         <Stage
+          ref={stageRef}
           width={dimensions.width}
           height={dimensions.height}
           x={stagePos.x}
@@ -277,9 +339,45 @@ export default function CanvasGrid() {
                 activeTool={activeTool}
               />
             ))}
-          </Layer>
-          <Layer listening={false}>
-            {/* Zde bude budoucí UI selekce (modrý obdélník při tažení) */}
+            {selectedShapeIds.length > 0 && (
+              <Transformer
+                ref={trRef}
+                borderStroke="#ffffff"
+                ignoreStroke={true}
+                borderStrokeWidth={1}
+                anchorSize={10}
+                anchorFill="#ffffff"
+                anchorStroke="#ffffff"
+                anchorStrokeWidth={1}
+                anchorCornerRadius={5}
+                rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
+                boundBoxFunc={(oldBox, newBox) => {
+                  if (Math.abs(newBox.width) < 20 || Math.abs(newBox.height) < 20) {
+                    return oldBox;
+                  }
+                  const gridSize = 20;
+                  return {
+                    ...newBox,
+                    x: Math.round(newBox.x / gridSize) * gridSize,
+                    y: Math.round(newBox.y / gridSize) * gridSize,
+                    width: Math.round(newBox.width / gridSize) * gridSize,
+                    height: Math.round(newBox.height / gridSize) * gridSize,
+                  };
+                }}
+              />
+            )}
+            {selectionBox && (
+              <Rect
+                x={selectionBox.x}
+                y={selectionBox.y}
+                width={selectionBox.width}
+                height={selectionBox.height}
+                fill="rgba(59, 130, 246, 0.2)"
+                stroke="#3b82f6"
+                strokeWidth={1}
+                listening={false}
+              />
+            )}
           </Layer>
         </Stage>
       </EditorContextMenu>

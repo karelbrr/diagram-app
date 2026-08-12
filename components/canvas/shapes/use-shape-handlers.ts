@@ -11,37 +11,36 @@ export function useShapeHandlers(
   const GRID_SIZE = 20;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shapeRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const trRef = useRef<any>(null);
-  const { selectedShapeId, updateShape, setSelectedShapeId, saveHistory } = useAppStore();
-  const isSelected = selectedShapeId === shape.id;
+  const { selectedShapeIds, updateShape, setSelectedShapeIds, toggleSelection, saveHistory } = useAppStore();
+  const isSelected = selectedShapeIds.includes(shape.id);
+  const lastPos = useRef({ x: shape.x, y: shape.y });
 
-  // Attach transformer to the shape when it's selected
-  useEffect(() => {
-    if (isSelected && trRef.current && shapeRef.current && !isEditing) {
-      trRef.current.nodes([shapeRef.current]);
-      trRef.current.getLayer().batchDraw();
-    }
-  }, [isSelected, isEditing, shape.type]);
-
-  // Handle shape selection on pointer down
   const handleSelect = (e: KonvaEventObject<PointerEvent>) => {
     e.cancelBubble = true;
     if (activeTool === "pointer") {
-      setSelectedShapeId(shape.id);
+      if (e.evt.shiftKey) {
+        toggleSelection(shape.id);
+      } else {
+        if (!isSelected) {
+          setSelectedShapeIds([shape.id]);
+        }
+      }
     }
   };
 
   // Save history before modifying shape continuously
-  const handleDragStart = () => {
+  const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
     saveHistory();
+    lastPos.current = { 
+      x: Math.round(e.target.x() / GRID_SIZE) * GRID_SIZE, 
+      y: Math.round(e.target.y() / GRID_SIZE) * GRID_SIZE 
+    };
   };
 
   const handleTransformStart = () => {
     saveHistory();
   };
 
-  // Moving and Snapping logic on drag move
   const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
     const snappedX = Math.round(e.target.x() / GRID_SIZE) * GRID_SIZE;
     const snappedY = Math.round(e.target.y() / GRID_SIZE) * GRID_SIZE;
@@ -49,7 +48,30 @@ export function useShapeHandlers(
     e.target.x(snappedX);
     e.target.y(snappedY);
 
-    updateShape(shape.id, { x: snappedX, y: snappedY });
+    const dx = snappedX - lastPos.current.x;
+    const dy = snappedY - lastPos.current.y;
+
+    if (dx !== 0 || dy !== 0) {
+      if (isSelected) {
+        selectedShapeIds.forEach(id => {
+          if (id === shape.id) {
+            updateShape(id, { x: snappedX, y: snappedY });
+          } else {
+            const node = e.target.getStage()?.findOne(`#${id}`);
+            if (node) {
+              const newX = node.x() + dx;
+              const newY = node.y() + dy;
+              node.x(newX);
+              node.y(newY);
+              updateShape(id, { x: newX, y: newY });
+            }
+          }
+        });
+      } else {
+        updateShape(shape.id, { x: snappedX, y: snappedY });
+      }
+      lastPos.current = { x: snappedX, y: snappedY };
+    }
 
     const stage = e.target.getStage();
     if (!stage) return;
@@ -110,7 +132,12 @@ export function useShapeHandlers(
         pointerClientY >= rect.top &&
         pointerClientY <= rect.bottom
       ) {
-        useAppStore.getState().removeShape(shape.id);
+        if (isSelected) {
+          selectedShapeIds.forEach(id => useAppStore.getState().removeShape(id));
+          useAppStore.getState().setSelectedShapeIds([]);
+        } else {
+          useAppStore.getState().removeShape(shape.id);
+        }
       }
     }
   };
@@ -168,7 +195,6 @@ export function useShapeHandlers(
 
   return {
     shapeRef,
-    trRef,
     isDraggable,
     isSelected,
     GRID_SIZE,

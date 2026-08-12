@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, Transformer } from "react-konva";
+import { Text } from "react-konva";
 import { Html } from "react-konva-utils";
 import { Shape, useAppStore } from "../../store/useAppStore";
 import { useShapeHandlers } from "./use-shape-handlers";
@@ -14,7 +14,6 @@ export const TextShape = ({ shape, activeTool }: TextShapeProps) => {
   
   const {
     shapeRef,
-    trRef,
     isDraggable,
     isSelected,
     handleSelect,
@@ -102,33 +101,6 @@ export const TextShape = ({ shape, activeTool }: TextShapeProps) => {
             }}
           />
         </Html>
-      )}
-      {isSelected && !isEditing && (
-        <Transformer
-          ref={trRef}
-          borderStroke="#ffffff"
-          ignoreStroke={true}
-          borderStrokeWidth={1}
-          anchorSize={10}
-          anchorFill="#ffffff"
-          anchorStroke="#ffffff"
-          anchorStrokeWidth={1}
-          anchorCornerRadius={5}
-          rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
-          boundBoxFunc={(oldBox, newBox) => {
-            if (Math.abs(newBox.width) < 20 || Math.abs(newBox.height) < 20) {
-              return oldBox;
-            }
-            const gridSize = 20;
-            return {
-              ...newBox,
-              x: Math.round(newBox.x / gridSize) * gridSize,
-              y: Math.round(newBox.y / gridSize) * gridSize,
-              width: Math.round(newBox.width / gridSize) * gridSize,
-              height: Math.round(newBox.height / gridSize) * gridSize,
-            };
-          }}
-        />
       )}
     </React.Fragment>
   );

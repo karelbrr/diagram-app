@@ -77,8 +77,9 @@ interface AppState {
   addShape: (shape: Shape) => void;
   updateShape: (id: string, newProps: Partial<Shape>) => void;
   removeShape: (id: string) => void;
-  selectedShapeId: string | null;
-  setSelectedShapeId: (id: string | null) => void;
+  selectedShapeIds: string[];
+  setSelectedShapeIds: (ids: string[]) => void;
+  toggleSelection: (id: string) => void;
   isHoveringTrash: boolean;
   setIsHoveringTrash: (isHovering: boolean) => void;
   trashedShapes: Shape[];
@@ -115,8 +116,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({
       shapes: state.shapes.filter((shape) => shape.id !== id),
       trashedShapes: shapeToRemove ? [...state.trashedShapes, shapeToRemove] : state.trashedShapes,
-      selectedShapeId:
-        state.selectedShapeId === id ? null : state.selectedShapeId,
+      selectedShapeIds: state.selectedShapeIds.filter((sId) => sId !== id),
     }));
 
     if (shapeToRemove) {
@@ -148,8 +148,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ trashedShapes: [] });
     toast.success("Trash emptied.");
   },
-  selectedShapeId: null,
-  setSelectedShapeId: (id) => set({ selectedShapeId: id }),
+  selectedShapeIds: [],
+  setSelectedShapeIds: (ids) => set({ selectedShapeIds: ids }),
+  toggleSelection: (id) =>
+    set((state) => ({
+      selectedShapeIds: state.selectedShapeIds.includes(id)
+        ? state.selectedShapeIds.filter((sId) => sId !== id)
+        : [...state.selectedShapeIds, id],
+    })),
   isHoveringTrash: false,
   setIsHoveringTrash: (val) => set({ isHoveringTrash: val }),
   trashedShapes: [],
@@ -178,7 +184,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       pastTrashedShapes: newPastTrashed,
       futureTrashedShapes: [state.trashedShapes, ...state.futureTrashedShapes],
       trashedShapes: previousTrashed,
-      selectedShapeId: null,
+      selectedShapeIds: [],
     };
   }),
   redo: () => set((state) => {
@@ -196,7 +202,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       pastTrashedShapes: [...state.pastTrashedShapes, state.trashedShapes],
       futureTrashedShapes: newFutureTrashed,
       trashedShapes: nextTrashed,
-      selectedShapeId: null,
+      selectedShapeIds: [],
     };
   }),
 }));
