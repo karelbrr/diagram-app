@@ -11,7 +11,7 @@ import React from "react"
 import { useAppStore } from "../store/useAppStore"
 
 export function EditorContextMenu({ children }: { children: React.ReactNode }) {
-  const { selectedShapeIds, removeShape, updateShape, shapes, setSelectedShapeIds } = useAppStore()
+  const { selectedShapeIds, removeShape, updateShape, shapes, setSelectedShapeIds, copyShapes, pasteShapes } = useAppStore()
 
   const hasSelection = selectedShapeIds.length > 0;
   const isAllLocked = selectedShapeIds.every(id => shapes.find(s => s.id === id)?.isLocked);
@@ -24,6 +24,23 @@ export function EditorContextMenu({ children }: { children: React.ReactNode }) {
       <ContextMenuContent className="w-56 border-zinc-800 bg-black text-zinc-300">
         {hasSelection ? (
           <>
+            <ContextMenuGroup>
+              <ContextMenuItem
+                className="focus:bg-zinc-800 focus:text-white"
+                onClick={() => copyShapes()}
+              >
+                Copy
+                <ContextMenuShortcut>⌘C</ContextMenuShortcut>
+              </ContextMenuItem>
+              <ContextMenuItem
+                className="focus:bg-zinc-800 focus:text-white"
+                onClick={() => pasteShapes()}
+              >
+                Paste
+                <ContextMenuShortcut>⌘V</ContextMenuShortcut>
+              </ContextMenuItem>
+            </ContextMenuGroup>
+            <ContextMenuSeparator className="bg-zinc-800" />
             <ContextMenuGroup>
               <ContextMenuItem
                 className="focus:bg-zinc-800 focus:text-white"
@@ -53,6 +70,16 @@ export function EditorContextMenu({ children }: { children: React.ReactNode }) {
           </>
         ) : (
           <>
+            <ContextMenuGroup>
+              <ContextMenuItem
+                className="focus:bg-zinc-800 focus:text-white"
+                onClick={() => pasteShapes()}
+              >
+                Paste
+                <ContextMenuShortcut>⌘V</ContextMenuShortcut>
+              </ContextMenuItem>
+            </ContextMenuGroup>
+            <ContextMenuSeparator className="bg-zinc-800" />
             <ContextMenuGroup>
               <ContextMenuItem className="focus:bg-zinc-800 focus:text-white">
                 Reset View

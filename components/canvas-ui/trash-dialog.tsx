@@ -76,7 +76,7 @@ export function TrashDialog({ open, onOpenChange }: TrashDialogProps) {
         </DialogHeader>
         
         {trashedShapes.length > 0 && (
-          <ScrollArea className="h-[300px] w-full rounded-md border border-zinc-800 p-4">
+          <ScrollArea className="h-75 w-full rounded-md border border-zinc-800 p-4">
             <div className="flex flex-col gap-3 pr-4">
               {trashedShapes.map((shape) => (
                 <div key={shape.id} className="flex items-center justify-between bg-zinc-900/50 p-3 rounded-lg border border-zinc-800">

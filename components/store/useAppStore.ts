@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type Tool =
   | "pointer"
@@ -93,11 +94,15 @@ interface AppState {
   saveHistory: () => void;
   undo: () => void;
   redo: () => void;
+  copyShapes: () => Promise<void>;
+  pasteShapes: () => Promise<void>;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
-  activeTool: "pointer",
-  setActiveTool: (tool) => set({ activeTool: tool }),
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      activeTool: "pointer",
+      setActiveTool: (tool) => set({ activeTool: tool }),
   shapes: [],
   addShape: (shape) => {
     get().saveHistory();
@@ -205,4 +210,47 @@ export const useAppStore = create<AppState>((set, get) => ({
       selectedShapeIds: [],
     };
   }),
-}));
+  copyShapes: async () => {
+    const state = get();
+    const selected = state.shapes.filter(s => state.selectedShapeIds.includes(s.id));
+    if (selected.length > 0) {
+      const json = JSON.stringify({ type: "diagram-app-clipboard", shapes: selected });
+      try {
+        await navigator.clipboard.writeText(json);
+        toast.success("Copied to clipboard");
+      } catch (err) {
+        toast.error("Failed to copy to clipboard");
+      }
+    }
+  },
+  pasteShapes: async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const parsed = JSON.parse(text);
+      if (parsed.type === "diagram-app-clipboard" && Array.isArray(parsed.shapes)) {
+        const newShapes = parsed.shapes.map((s: Shape) => ({
+          ...s,
+          id: crypto.randomUUID(),
+          x: s.x + 20,
+          y: s.y + 20,
+        }));
+        
+        get().saveHistory();
+        set((state) => ({
+          shapes: [...state.shapes, ...newShapes],
+          selectedShapeIds: newShapes.map((s: Shape) => s.id),
+        }));
+      }
+    } catch (err) {
+      // Silently ignore if clipboard doesn't contain valid JSON or permission denied
+    }
+  },
+}),
+  {
+    name: "diagram-app-storage",
+    partialize: (state) => ({
+      shapes: state.shapes,
+      trashedShapes: state.trashedShapes,
+    }),
+  }
+));

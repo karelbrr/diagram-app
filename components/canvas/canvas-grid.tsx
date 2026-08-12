@@ -33,6 +33,8 @@ export default function CanvasGrid() {
     removeShape,
     undo,
     redo,
+    copyShapes,
+    pasteShapes,
   } = useAppStore();
 
   // Attach nodes to transformer when selection changes
@@ -68,6 +70,18 @@ export default function CanvasGrid() {
         return;
       }
 
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        copyShapes();
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "v") {
+        e.preventDefault();
+        pasteShapes();
+        return;
+      }
+
       if (selectedShapeIds.length > 0 && (e.key === "Delete" || e.key === "Backspace")) {
         selectedShapeIds.forEach(id => removeShape(id));
         setSelectedShapeIds([]);
@@ -76,7 +90,7 @@ export default function CanvasGrid() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedShapeIds, removeShape, undo, redo]);
+  }, [selectedShapeIds, removeShape, undo, redo, copyShapes, pasteShapes]);
 
   // Handle window resize to update stage dimensions
   useEffect(() => {
