@@ -18,8 +18,10 @@ export const TextShape = ({ shape, activeTool }: TextShapeProps) => {
     isDraggable,
     isSelected,
     handleSelect,
+    handleDragStart,
     handleDragMove,
     handleDragEnd,
+    handleTransformStart,
     handleTransformEnd,
   } = useShapeHandlers(shape, activeTool, isEditing);
 
@@ -46,8 +48,10 @@ export const TextShape = ({ shape, activeTool }: TextShapeProps) => {
         rotation={textShape.rotation || 0}
         draggable={isDraggable && !isEditing}
         onPointerDown={handleSelect}
+        onDragStart={handleDragStart}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
+        onTransformStart={handleTransformStart}
         onTransformEnd={handleTransformEnd}
         onDblClick={() => setIsEditing(true)}
         onDblTap={() => setIsEditing(true)}
@@ -83,6 +87,7 @@ export const TextShape = ({ shape, activeTool }: TextShapeProps) => {
             }}
             onBlur={(e) => {
               setIsEditing(false);
+              useAppStore.getState().saveHistory();
               updateShape(shape.id, { text: e.target.value });
             }}
             onKeyDown={(e) => {
@@ -91,6 +96,7 @@ export const TextShape = ({ shape, activeTool }: TextShapeProps) => {
               } else if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 setIsEditing(false);
+                useAppStore.getState().saveHistory();
                 updateShape(shape.id, { text: e.currentTarget.value });
               }
             }}

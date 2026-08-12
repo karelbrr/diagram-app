@@ -15,8 +15,10 @@ export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
     isDraggable,
     isSelected,
     handleSelect,
+    handleDragStart,
     handleDragMove,
     handleDragEnd,
+    handleTransformStart,
     handleTransformEnd,
   } = useShapeHandlers(shape, activeTool);
 
@@ -45,8 +47,10 @@ export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
               rotation={rectShape.rotation}
               draggable={isDraggable}
               onPointerDown={handleSelect}
+              onDragStart={handleDragStart}
               onDragMove={handleDragMove}
               onDragEnd={handleDragEnd}
+              onTransformStart={handleTransformStart}
               onTransformEnd={handleTransformEnd}
             />
           );
@@ -70,6 +74,7 @@ export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
               strokeWidth={circleShape.strokeWidth}
               draggable={isDraggable}
               onPointerDown={handleSelect}
+              onDragStart={handleDragStart}
               onDragMove={handleDragMove}
               onDragEnd={handleDragEnd}
             />
@@ -96,6 +101,7 @@ export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
               rotation={45}
               draggable={isDraggable}
               onPointerDown={handleSelect}
+              onDragStart={handleDragStart}
               onDragMove={handleDragMove}
               onDragEnd={handleDragEnd}
             />
@@ -121,8 +127,10 @@ export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
               strokeWidth={triangleShape.strokeWidth}
               draggable={isDraggable}
               onPointerDown={handleSelect}
+              onDragStart={handleDragStart}
               onDragMove={handleDragMove}
               onDragEnd={handleDragEnd}
+              onTransformStart={handleTransformStart}
               onTransformEnd={handleTransformEnd}
             />
           );

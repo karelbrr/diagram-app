@@ -24,17 +24,29 @@ export default function CanvasGrid() {
     setActiveTool,
     selectedShapeId,
     removeShape,
+    undo,
+    redo,
   } = useAppStore();
 
   // Handle global keydown events, such as deleting the selected shape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't delete if we are typing inside an input or textarea
+      // Don't intercept if we are typing inside an input or textarea
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement ||
-        e.target instanceof HTMLElement && e.target.isContentEditable
+        (e.target instanceof HTMLElement && e.target.isContentEditable)
       ) {
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
         return;
       }
 
@@ -45,7 +57,7 @@ export default function CanvasGrid() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedShapeId, removeShape]);
+  }, [selectedShapeId, removeShape, undo, redo]);
 
   // Handle window resize to update stage dimensions
   useEffect(() => {

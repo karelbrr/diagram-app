@@ -37,6 +37,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TrashDialog } from "./trash-dialog";
 
 export type DockProps = {
   className?: string;
@@ -198,10 +199,11 @@ export default function Dock({
   dockHeight = 256,
   baseItemSize = 50,
 }: DockProps) {
+  const [isTrashOpen, setIsTrashOpen] = useState(false);
   const mouseX = useMotionValue(Infinity);
   const isHovered = useMotionValue(0);
 
-  const { selectedShapeId, removeShape, isHoveringTrash } = useAppStore();
+  const { isHoveringTrash } = useAppStore();
 
   const maxHeight = useMemo(
     () => Math.max(dockHeight, magnification + magnification / 2 + 4),
@@ -262,10 +264,12 @@ export default function Dock({
   ];
 
   return (
-    <motion.div
-      style={{ height, scrollbarWidth: "none" }}
-      className="mx-2 flex max-w-full items-center"
-    >
+    <>
+      <TrashDialog open={isTrashOpen} onOpenChange={setIsTrashOpen} />
+      <motion.div
+        style={{ height, scrollbarWidth: "none" }}
+        className="mx-2 flex max-w-full items-center"
+      >
       <motion.div
         onMouseMove={({ pageX }) => {
           isHovered.set(1);
@@ -312,7 +316,7 @@ export default function Dock({
         <DockItem
           id="trash-dock-item"
           key="trash"
-          onClick={() => selectedShapeId && removeShape(selectedShapeId)}
+          onClick={() => setIsTrashOpen(true)}
           mouseX={mouseX}
           spring={spring}
           distance={distance}
@@ -333,5 +337,6 @@ export default function Dock({
         </DockItem>
       </motion.div>
     </motion.div>
+    </>
   );
 }

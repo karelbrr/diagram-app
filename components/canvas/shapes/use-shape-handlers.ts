@@ -13,7 +13,7 @@ export function useShapeHandlers(
   const shapeRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const trRef = useRef<any>(null);
-  const { selectedShapeId, updateShape, setSelectedShapeId } = useAppStore();
+  const { selectedShapeId, updateShape, setSelectedShapeId, saveHistory } = useAppStore();
   const isSelected = selectedShapeId === shape.id;
 
   // Attach transformer to the shape when it's selected
@@ -30,6 +30,15 @@ export function useShapeHandlers(
     if (activeTool === "pointer") {
       setSelectedShapeId(shape.id);
     }
+  };
+
+  // Save history before modifying shape continuously
+  const handleDragStart = () => {
+    saveHistory();
+  };
+
+  const handleTransformStart = () => {
+    saveHistory();
   };
 
   // Moving and Snapping logic on drag move
@@ -164,8 +173,10 @@ export function useShapeHandlers(
     isSelected,
     GRID_SIZE,
     handleSelect,
+    handleDragStart,
     handleDragMove,
     handleDragEnd,
+    handleTransformStart,
     handleTransformEnd,
   };
 }

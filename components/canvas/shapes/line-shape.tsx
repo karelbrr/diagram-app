@@ -18,6 +18,7 @@ export const LineShape = ({ shape, activeTool, scale = 1 }: LineShapeProps) => {
     isSelected,
     GRID_SIZE,
     handleSelect,
+    handleDragStart,
     handleDragMove,
     handleDragEnd,
   } = useShapeHandlers(shape, activeTool);
@@ -62,6 +63,7 @@ export const LineShape = ({ shape, activeTool, scale = 1 }: LineShapeProps) => {
       x={lineShape.x}
       y={lineShape.y}
       draggable={isDraggable}
+      onDragStart={handleDragStart}
       onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
       onPointerDown={handleSelect}
@@ -99,6 +101,10 @@ export const LineShape = ({ shape, activeTool, scale = 1 }: LineShapeProps) => {
             stroke="rgba(255, 255, 255, 1)"
             strokeWidth={1 * invScale}
             draggable={true}
+            onDragStart={(e) => {
+              e.cancelBubble = true;
+              useAppStore.getState().saveHistory();
+            }}
             onDragMove={(e) => handleLinePointMove(0, e)}
             onDragEnd={(e) => {
               e.cancelBubble = true;
@@ -130,6 +136,10 @@ export const LineShape = ({ shape, activeTool, scale = 1 }: LineShapeProps) => {
             stroke="rgba(255, 255, 255, 1)"
             strokeWidth={1 * invScale}
             draggable={true}
+            onDragStart={(e) => {
+              e.cancelBubble = true;
+              useAppStore.getState().saveHistory();
+            }}
             onDragMove={(e) => handleLinePointMove(1, e)}
             onDragEnd={(e) => {
               e.cancelBubble = true;

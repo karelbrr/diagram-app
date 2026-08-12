@@ -19,6 +19,7 @@ import {
   Type,
   MousePointer2,
   Hand,
+  Shapes,
 } from "lucide-react";
 import { ElementType } from "react";
 import { useAppStore, Tool } from "../store/useAppStore";
@@ -53,7 +54,7 @@ const ToolButton = ({
 };
 
 export function LeftBar() {
-  const { activeTool, setActiveTool, selectedShapeId, shapes, updateShape } = useAppStore();
+  const { activeTool, setActiveTool, selectedShapeId, shapes, updateShape, saveHistory } = useAppStore();
   const selectedShape = shapes.find(s => s.id === selectedShapeId);
 
   const getHexValue = (color: string) => {
@@ -74,7 +75,10 @@ export function LeftBar() {
         <TabsContent value="tools">
           <Card className=" w-full max-w-xs bg-black text-white shadow-2xl pointer-events-auto">
             <CardHeader>
-              <CardTitle>Diagram Editor</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Shapes className="h-5 w-5 text-zinc-300" />
+                diagram editor
+              </CardTitle>
               <CardDescription className="text-zinc-400">
                 Select shapes and tools to draw.
               </CardDescription>
@@ -210,6 +214,7 @@ export function LeftBar() {
                       <input 
                         type="color" 
                         value={getHexValue(selectedShape.fill)} 
+                        onPointerDown={() => saveHistory()}
                         onChange={(e) => updateShape(selectedShape.id, { fill: e.target.value })}
                         className="w-8 h-8 rounded cursor-pointer bg-transparent border-0 p-0"
                       />
@@ -223,6 +228,7 @@ export function LeftBar() {
                       <input 
                         type="color" 
                         value={getHexValue(selectedShape.stroke)} 
+                        onPointerDown={() => saveHistory()}
                         onChange={(e) => updateShape(selectedShape.id, { stroke: e.target.value })}
                         className="w-8 h-8 rounded cursor-pointer bg-transparent border-0 p-0"
                       />
@@ -240,6 +246,7 @@ export function LeftBar() {
                       min="0" 
                       max="20" 
                       value={selectedShape.strokeWidth} 
+                      onPointerDown={() => saveHistory()}
                       onChange={(e) => updateShape(selectedShape.id, { strokeWidth: parseInt(e.target.value) })}
                       className="w-full accent-white"
                     />
@@ -256,6 +263,7 @@ export function LeftBar() {
                         min="10" 
                         max="100" 
                         value={(selectedShape as import("../store/useAppStore").TextShape).fontSize} 
+                        onPointerDown={() => saveHistory()}
                         onChange={(e) => updateShape(selectedShape.id, { fontSize: parseInt(e.target.value) })}
                         className="w-full accent-white"
                       />
