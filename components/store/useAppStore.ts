@@ -12,7 +12,7 @@ export type Tool =
   | "polyline"
   | "triangle"
   | "text";
-export type ShapeType = "rect" | "circle" | "diamond" | "line";
+export type ShapeType = "rect" | "circle" | "diamond" | "line" | "arrow" | "triangle" | "polyline" | "text";
 
 export interface BaseShape {
   id: string;
@@ -47,7 +47,28 @@ export interface LineShape extends BaseShape {
   points: number[];
 }
 
-export type Shape = RectShape | CircleShape | DiamondShape | LineShape;
+export interface ArrowShape extends BaseShape {
+  type: "arrow";
+  points: number[];
+}
+
+export interface TriangleShape extends BaseShape {
+  type: "triangle";
+  radius: number;
+}
+
+export interface PolylineShape extends BaseShape {
+  type: "polyline";
+  points: number[];
+}
+
+export interface TextShape extends BaseShape {
+  type: "text";
+  text: string;
+  fontSize: number;
+}
+
+export type Shape = RectShape | CircleShape | DiamondShape | LineShape | ArrowShape | TriangleShape | PolylineShape | TextShape;
 
 interface AppState {
   activeTool: Tool;

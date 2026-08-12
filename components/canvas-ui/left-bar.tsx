@@ -4,7 +4,6 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -21,18 +20,18 @@ import {
   MousePointer2,
   Hand,
 } from "lucide-react";
+import { ElementType } from "react";
 import { useAppStore, Tool } from "../store/useAppStore";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ToolButton = ({
-  tool,
   icon: Icon,
   label,
   isActive,
   onClick,
 }: {
   tool: Tool;
-  icon: any;
+  icon: ElementType;
   label: string;
   isActive: boolean;
   onClick: () => void;
@@ -54,19 +53,25 @@ const ToolButton = ({
 };
 
 export function LeftBar() {
-  const { activeTool, setActiveTool } = useAppStore();
+  const { activeTool, setActiveTool, selectedShapeId, shapes, updateShape } = useAppStore();
+  const selectedShape = shapes.find(s => s.id === selectedShapeId);
+
+  const getHexValue = (color: string) => {
+    if (color && color.startsWith("#")) return color;
+    return "#ffffff"; // Default fallback for rgba or named colors
+  };
 
   return (
     <section>
       <Tabs
-        defaultValue="account"
+        defaultValue="tools"
         className="w-full absolute top-6 left-6 z-10 max-w-xs  text-white shadow-2xl pointer-events-auto"
       >
-        {/* <TabsList className="bg-black rounded-tl-lg rounded-tr-lg mb-0 p-1">
-          <TabsTrigger value="account" className="">Account</TabsTrigger>
-          <TabsTrigger value="password">Password</TabsTrigger>
-        </TabsList> */}
-        <TabsContent value="account">
+        <TabsList className="bg-black rounded-tl-lg rounded-tr-lg mb-0 p-1 w-full flex">
+          <TabsTrigger value="tools" className="flex-1">Tools</TabsTrigger>
+          <TabsTrigger value="properties" className="flex-1">Properties</TabsTrigger>
+        </TabsList>
+        <TabsContent value="tools">
           <Card className=" w-full max-w-xs bg-black text-white shadow-2xl pointer-events-auto">
             <CardHeader>
               <CardTitle>Diagram Editor</CardTitle>
@@ -129,7 +134,7 @@ export function LeftBar() {
                     icon={Triangle}
                     label="Triangle"
                     isActive={activeTool === "triangle"}
-                    onClick={() => setActiveTool("triangle" as any)}
+                    onClick={() => setActiveTool("triangle")}
                   />
                   <ToolButton
                     tool="diamond"
@@ -143,28 +148,28 @@ export function LeftBar() {
                     icon={Minus}
                     label="Line"
                     isActive={activeTool === "line"}
-                    onClick={() => setActiveTool("line" as any)}
+                    onClick={() => setActiveTool("line")}
                   />
                   <ToolButton
                     tool="polyline"
                     icon={Activity}
                     label="Polyline"
                     isActive={activeTool === "polyline"}
-                    onClick={() => setActiveTool("polyline" as any)}
+                    onClick={() => setActiveTool("polyline")}
                   />
                   <ToolButton
                     tool="arrow"
                     icon={ArrowUpRight}
                     label="Arrow"
                     isActive={activeTool === "arrow"}
-                    onClick={() => setActiveTool("arrow" as any)}
+                    onClick={() => setActiveTool("arrow")}
                   />
                   <ToolButton
                     tool="text"
                     icon={Type}
                     label="Text"
                     isActive={activeTool === "text"}
-                    onClick={() => setActiveTool("text" as any)}
+                    onClick={() => setActiveTool("text")}
                   />
                 </div>
               </div>
@@ -186,7 +191,81 @@ export function LeftBar() {
       </CardFooter> */}
           </Card>
         </TabsContent>
-        <TabsContent value="password">Change your password here.</TabsContent>
+        <TabsContent value="properties">
+          <Card className="w-full max-w-xs bg-black text-white shadow-2xl pointer-events-auto">
+            <CardHeader>
+              <CardTitle>Properties</CardTitle>
+              <CardDescription className="text-zinc-400">
+                Edit the selected shape.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!selectedShape ? (
+                <div className="text-sm text-zinc-400">Select a shape to edit its properties.</div>
+              ) : (
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-medium text-zinc-300">Fill Color</label>
+                    <div className="flex gap-3 items-center bg-zinc-900/50 p-2 rounded-md border border-zinc-800">
+                      <input 
+                        type="color" 
+                        value={getHexValue(selectedShape.fill)} 
+                        onChange={(e) => updateShape(selectedShape.id, { fill: e.target.value })}
+                        className="w-8 h-8 rounded cursor-pointer bg-transparent border-0 p-0"
+                      />
+                      <span className="text-sm text-zinc-400 font-mono">{selectedShape.fill}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-medium text-zinc-300">Stroke Color</label>
+                    <div className="flex gap-3 items-center bg-zinc-900/50 p-2 rounded-md border border-zinc-800">
+                      <input 
+                        type="color" 
+                        value={getHexValue(selectedShape.stroke)} 
+                        onChange={(e) => updateShape(selectedShape.id, { stroke: e.target.value })}
+                        className="w-8 h-8 rounded cursor-pointer bg-transparent border-0 p-0"
+                      />
+                      <span className="text-sm text-zinc-400 font-mono">{selectedShape.stroke}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between">
+                      <label className="text-xs font-medium text-zinc-300">Stroke Width</label>
+                      <span className="text-xs text-zinc-400">{selectedShape.strokeWidth}px</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="20" 
+                      value={selectedShape.strokeWidth} 
+                      onChange={(e) => updateShape(selectedShape.id, { strokeWidth: parseInt(e.target.value) })}
+                      className="w-full accent-white"
+                    />
+                  </div>
+
+                  {selectedShape.type === "text" && (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex justify-between">
+                        <label className="text-xs font-medium text-zinc-300">Font Size</label>
+                        <span className="text-xs text-zinc-400">{(selectedShape as import("../store/useAppStore").TextShape).fontSize}px</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="10" 
+                        max="100" 
+                        value={(selectedShape as import("../store/useAppStore").TextShape).fontSize} 
+                        onChange={(e) => updateShape(selectedShape.id, { fontSize: parseInt(e.target.value) })}
+                        className="w-full accent-white"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </section>
   );

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Stage, Layer, Line, Rect } from "react-konva";
+import { Stage, Layer, Line } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { getPointerPositionInWorld } from "@/lib/get-pointer-position-in-world";
 import { EditorContextMenu } from "../ui/editor-context-menu";
@@ -22,10 +22,34 @@ export default function CanvasGrid() {
     updateShape,
     setSelectedShapeId,
     setActiveTool,
+    selectedShapeId,
+    removeShape,
   } = useAppStore();
+
+  // Handle global keydown events, such as deleting the selected shape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't delete if we are typing inside an input or textarea
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLElement && e.target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (selectedShapeId && (e.key === "Delete" || e.key === "Backspace")) {
+        removeShape(selectedShapeId);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedShapeId, removeShape]);
 
   // Handle window resize to update stage dimensions
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDimensions({ width: window.innerWidth, height: window.innerHeight });
 
     const handleResize = () => {
@@ -79,7 +103,7 @@ export default function CanvasGrid() {
     }
   };
 
-  const drawableTools = ["rect", "circle", "diamond", "line"];
+  const drawableTools = ["rect", "circle", "diamond", "line", "arrow", "triangle", "polyline", "text"];
 
   // Handle drawing new shapes
   const handlePointerDown = (e: KonvaEventObject<PointerEvent>) => {
@@ -110,7 +134,6 @@ export default function CanvasGrid() {
 
     const baseProps = {
       id: newId,
-      type: activeTool as any,
       x: snappedStartX,
       y: snappedStartY,
       rotation: 0,
@@ -121,11 +144,15 @@ export default function CanvasGrid() {
     };
 
     if (activeTool === "rect") {
-      addShape({ ...baseProps, width: 0, height: 0 } as any);
-    } else if (activeTool === "circle" || activeTool === "diamond") {
-      addShape({ ...baseProps, radius: 0 } as any);
-    } else if (activeTool === "line") {
-      addShape({ ...baseProps, points: [0, 0, 0, 0] } as any);
+      addShape({ ...baseProps, type: "rect", width: 0, height: 0 });
+    } else if (activeTool === "circle") {
+      addShape({ ...baseProps, type: "circle", radius: 0 });
+    } else if (activeTool === "diamond" || activeTool === "triangle") {
+      addShape({ ...baseProps, type: activeTool as "diamond" | "triangle", radius: 0 });
+    } else if (activeTool === "line" || activeTool === "arrow" || activeTool === "polyline") {
+      addShape({ ...baseProps, type: activeTool as "line" | "arrow" | "polyline", points: [0, 0, 0, 0] });
+    } else if (activeTool === "text") {
+      addShape({ ...baseProps, type: "text", text: "Type here...", fontSize: 20, fill: "#ffffff", strokeWidth: 0 });
     }
   };
 
@@ -147,12 +174,12 @@ export default function CanvasGrid() {
       const width = snappedCurrentX - startPos.x;
       const height = snappedCurrentY - startPos.y;
       updateShape(currentShapeId, { width, height });
-    } else if (activeTool === "circle" || activeTool === "diamond") {
+    } else if (activeTool === "circle" || activeTool === "diamond" || activeTool === "triangle") {
       const dx = snappedCurrentX - startPos.x;
       const dy = snappedCurrentY - startPos.y;
       const radius = Math.sqrt(dx * dx + dy * dy);
       updateShape(currentShapeId, { radius });
-    } else if (activeTool === "line") {
+    } else if (activeTool === "line" || activeTool === "arrow" || activeTool === "polyline") {
       const dx = snappedCurrentX - startPos.x;
       const dy = snappedCurrentY - startPos.y;
       updateShape(currentShapeId, { points: [0, 0, dx, dy] });
