@@ -11,7 +11,7 @@ interface TextShapeProps {
 
 export const TextShape = ({ shape, activeTool }: TextShapeProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const {
     shapeRef,
     isDraggable,
@@ -44,6 +44,8 @@ export const TextShape = ({ shape, activeTool }: TextShapeProps) => {
         text={textShape.text}
         fontSize={textShape.fontSize}
         fill={textShape.fill}
+        opacity={textShape.opacity}
+        align={textShape.textAlign || "left"}
         rotation={textShape.rotation || 0}
         draggable={isDraggable && !isEditing}
         onPointerDown={handleSelect}
@@ -83,6 +85,7 @@ export const TextShape = ({ shape, activeTool }: TextShapeProps) => {
               lineHeight: "1",
               fontFamily: "Arial",
               whiteSpace: "pre-wrap",
+              textAlign: textShape.textAlign || "left",
             }}
             onBlur={(e) => {
               setIsEditing(false);

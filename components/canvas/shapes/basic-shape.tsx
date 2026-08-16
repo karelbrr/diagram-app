@@ -43,6 +43,8 @@ export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
               fill={rectShape.fill}
               stroke={rectShape.stroke}
               strokeWidth={rectShape.strokeWidth}
+              opacity={rectShape.opacity}
+              dash={rectShape.dash}
               rotation={rectShape.rotation}
               draggable={isDraggable}
               onPointerDown={handleSelect}
@@ -71,6 +73,8 @@ export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
               fill={circleShape.fill}
               stroke={circleShape.stroke}
               strokeWidth={circleShape.strokeWidth}
+              opacity={circleShape.opacity}
+              dash={circleShape.dash}
               draggable={isDraggable}
               onPointerDown={handleSelect}
               onDragStart={handleDragStart}
@@ -97,6 +101,8 @@ export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
               fill={diamondShape.fill}
               stroke={diamondShape.stroke}
               strokeWidth={diamondShape.strokeWidth}
+              opacity={diamondShape.opacity}
+              dash={diamondShape.dash}
               rotation={45}
               draggable={isDraggable}
               onPointerDown={handleSelect}
@@ -124,6 +130,8 @@ export const BasicShape = ({ shape, activeTool }: BasicShapeProps) => {
               fill={triangleShape.fill}
               stroke={triangleShape.stroke}
               strokeWidth={triangleShape.strokeWidth}
+              opacity={triangleShape.opacity}
+              dash={triangleShape.dash}
               draggable={isDraggable}
               onPointerDown={handleSelect}
               onDragStart={handleDragStart}

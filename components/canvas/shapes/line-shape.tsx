@@ -72,8 +72,10 @@ export const LineShape = ({ shape, activeTool, scale = 1 }: LineShapeProps) => {
         <Line
           ref={shapeRef}
           points={points}
-          stroke="#ffffff"
-          strokeWidth={2}
+          stroke={lineShape.stroke}
+          strokeWidth={lineShape.strokeWidth}
+          opacity={lineShape.opacity}
+          dash={lineShape.dash}
           hitStrokeWidth={20}
           lineCap="round"
         />
@@ -81,9 +83,11 @@ export const LineShape = ({ shape, activeTool, scale = 1 }: LineShapeProps) => {
         <Arrow
           ref={shapeRef}
           points={points}
-          stroke="#ffffff"
-          fill="#ffffff"
-          strokeWidth={2}
+          stroke={lineShape.stroke}
+          fill={lineShape.stroke}
+          strokeWidth={lineShape.strokeWidth}
+          opacity={lineShape.opacity}
+          dash={lineShape.dash}
           hitStrokeWidth={20}
           lineCap="round"
           pointerLength={10}

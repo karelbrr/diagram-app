@@ -25,6 +25,8 @@ export interface BaseShape {
   fill: string;
   stroke: string;
   strokeWidth: number;
+  opacity?: number;
+  dash?: number[];
 }
 
 export interface RectShape extends BaseShape {
@@ -67,6 +69,7 @@ export interface TextShape extends BaseShape {
   type: "text";
   text: string;
   fontSize: number;
+  textAlign?: "left" | "center" | "right";
 }
 
 export type Shape = RectShape | CircleShape | DiamondShape | LineShape | ArrowShape | TriangleShape | PolylineShape | TextShape;
@@ -78,6 +81,7 @@ interface AppState {
   addShape: (shape: Shape) => void;
   updateShape: (id: string, newProps: Partial<Shape>) => void;
   removeShape: (id: string) => void;
+  clearShapes: () => void;
   selectedShapeIds: string[];
   setSelectedShapeIds: (ids: string[]) => void;
   toggleSelection: (id: string) => void;
@@ -130,6 +134,15 @@ export const useAppStore = create<AppState>()(
         { position: "top-right" },
       );
     }
+  },
+  clearShapes: () => {
+    get().saveHistory();
+    set((state) => ({
+      trashedShapes: [...state.trashedShapes, ...state.shapes],
+      shapes: [],
+      selectedShapeIds: [],
+    }));
+    toast.info("Canvas cleared.", { position: "top-right" });
   },
   restoreShape: (id) => {
     const shapeToRestore = get().trashedShapes.find((s) => s.id === id);

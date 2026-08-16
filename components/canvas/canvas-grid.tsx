@@ -6,6 +6,7 @@ import { getPointerPositionInWorld } from "@/lib/get-pointer-position-in-world";
 import { EditorContextMenu } from "../ui/editor-context-menu";
 import { ShapeRenderer } from "./shape-renderer";
 import { useAppStore } from "../store/useAppStore";
+import { ZoomIn, ZoomOut, Maximize } from "lucide-react";
 
 export default function CanvasGrid() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -15,8 +16,13 @@ export default function CanvasGrid() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentShapeId, setCurrentShapeId] = useState<string | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [selectionBox, setSelectionBox] = useState<{ x: number, y: number, width: number, height: number } | null>(null);
-  
+  const [selectionBox, setSelectionBox] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const trRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,7 +47,7 @@ export default function CanvasGrid() {
   useEffect(() => {
     if (trRef.current && stageRef.current) {
       const nodes = selectedShapeIds
-        .map(id => stageRef.current.findOne(`#${id}`))
+        .map((id) => stageRef.current.findOne(`#${id}`))
         .filter(Boolean);
       trRef.current.nodes(nodes);
       trRef.current.getLayer().batchDraw();
@@ -82,9 +88,24 @@ export default function CanvasGrid() {
         return;
       }
 
-      if (selectedShapeIds.length > 0 && (e.key === "Delete" || e.key === "Backspace")) {
-        selectedShapeIds.forEach(id => removeShape(id));
+      if (
+        selectedShapeIds.length > 0 &&
+        (e.key === "Delete" || e.key === "Backspace")
+      ) {
+        selectedShapeIds.forEach((id) => removeShape(id));
         setSelectedShapeIds([]);
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      if (!e.metaKey && !e.ctrlKey) {
+        if (key === "v") setActiveTool("pointer");
+        if (key === "h") setActiveTool("pan");
+        if (key === "r") setActiveTool("rect");
+        if (key === "c") setActiveTool("circle");
+        if (key === "d") setActiveTool("diamond");
+        if (key === "l") setActiveTool("line");
+        if (key === "t") setActiveTool("text");
       }
     };
 
@@ -141,6 +162,41 @@ export default function CanvasGrid() {
     }
   };
 
+  const handleZoomIn = () => {
+    const scaleBy = 1.2;
+    const newScale = scale * scaleBy;
+    setScale(newScale);
+    const center = { x: dimensions.width / 2, y: dimensions.height / 2 };
+    const mousePointTo = {
+      x: (center.x - stagePos.x) / scale,
+      y: (center.y - stagePos.y) / scale,
+    };
+    setStagePos({
+      x: center.x - mousePointTo.x * newScale,
+      y: center.y - mousePointTo.y * newScale,
+    });
+  };
+
+  const handleZoomOut = () => {
+    const scaleBy = 1.2;
+    const newScale = scale / scaleBy;
+    setScale(newScale);
+    const center = { x: dimensions.width / 2, y: dimensions.height / 2 };
+    const mousePointTo = {
+      x: (center.x - stagePos.x) / scale,
+      y: (center.y - stagePos.y) / scale,
+    };
+    setStagePos({
+      x: center.x - mousePointTo.x * newScale,
+      y: center.y - mousePointTo.y * newScale,
+    });
+  };
+
+  const handleResetZoom = () => {
+    setScale(1);
+    setStagePos({ x: 0, y: 0 });
+  };
+
   // Update stage position after dragging
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
     if (activeTool === "pan") {
@@ -148,7 +204,16 @@ export default function CanvasGrid() {
     }
   };
 
-  const drawableTools = ["rect", "circle", "diamond", "line", "arrow", "triangle", "polyline", "text"];
+  const drawableTools = [
+    "rect",
+    "circle",
+    "diamond",
+    "line",
+    "arrow",
+    "triangle",
+    "polyline",
+    "text",
+  ];
 
   // Handle drawing new shapes
   const handlePointerDown = (e: KonvaEventObject<PointerEvent>) => {
@@ -198,6 +263,8 @@ export default function CanvasGrid() {
       fill: "rgba(255, 255, 255, 0.1)",
       stroke: "rgba(255, 255, 255, 0.5)",
       strokeWidth: 1,
+      opacity: 1,
+      dash: [],
     };
 
     if (activeTool === "rect") {
@@ -205,11 +272,31 @@ export default function CanvasGrid() {
     } else if (activeTool === "circle") {
       addShape({ ...baseProps, type: "circle", radius: 0 });
     } else if (activeTool === "diamond" || activeTool === "triangle") {
-      addShape({ ...baseProps, type: activeTool as "diamond" | "triangle", radius: 0 });
-    } else if (activeTool === "line" || activeTool === "arrow" || activeTool === "polyline") {
-      addShape({ ...baseProps, type: activeTool as "line" | "arrow" | "polyline", points: [0, 0, 0, 0] });
+      addShape({
+        ...baseProps,
+        type: activeTool as "diamond" | "triangle",
+        radius: 0,
+      });
+    } else if (
+      activeTool === "line" ||
+      activeTool === "arrow" ||
+      activeTool === "polyline"
+    ) {
+      addShape({
+        ...baseProps,
+        type: activeTool as "line" | "arrow" | "polyline",
+        points: [0, 0, 0, 0],
+      });
     } else if (activeTool === "text") {
-      addShape({ ...baseProps, type: "text", text: "Type here...", fontSize: 20, fill: "#ffffff", strokeWidth: 0 });
+      addShape({
+        ...baseProps,
+        type: "text",
+        text: "Type here...",
+        fontSize: 20,
+        fill: "#ffffff",
+        strokeWidth: 0,
+        textAlign: "left",
+      });
     }
   };
 
@@ -243,12 +330,20 @@ export default function CanvasGrid() {
       const width = snappedCurrentX - startPos.x;
       const height = snappedCurrentY - startPos.y;
       updateShape(currentShapeId, { width, height });
-    } else if (activeTool === "circle" || activeTool === "diamond" || activeTool === "triangle") {
+    } else if (
+      activeTool === "circle" ||
+      activeTool === "diamond" ||
+      activeTool === "triangle"
+    ) {
       const dx = snappedCurrentX - startPos.x;
       const dy = snappedCurrentY - startPos.y;
       const radius = Math.sqrt(dx * dx + dy * dy);
       updateShape(currentShapeId, { radius });
-    } else if (activeTool === "line" || activeTool === "arrow" || activeTool === "polyline") {
+    } else if (
+      activeTool === "line" ||
+      activeTool === "arrow" ||
+      activeTool === "polyline"
+    ) {
       const dx = snappedCurrentX - startPos.x;
       const dy = snappedCurrentY - startPos.y;
       updateShape(currentShapeId, { points: [0, 0, dx, dy] });
@@ -266,11 +361,15 @@ export default function CanvasGrid() {
       };
 
       const shapesInBox = shapes.filter((shape) => {
-        return shape.x >= box.x && shape.x <= box.x + box.width &&
-               shape.y >= box.y && shape.y <= box.y + box.height;
+        return (
+          shape.x >= box.x &&
+          shape.x <= box.x + box.width &&
+          shape.y >= box.y &&
+          shape.y <= box.y + box.height
+        );
       });
-      
-      setSelectedShapeIds(shapesInBox.map(s => s.id));
+
+      setSelectedShapeIds(shapesInBox.map((s) => s.id));
       setSelectionBox(null);
       return;
     }
@@ -366,7 +465,10 @@ export default function CanvasGrid() {
                 anchorCornerRadius={5}
                 rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
                 boundBoxFunc={(oldBox, newBox) => {
-                  if (Math.abs(newBox.width) < 20 || Math.abs(newBox.height) < 20) {
+                  if (
+                    Math.abs(newBox.width) < 20 ||
+                    Math.abs(newBox.height) < 20
+                  ) {
                     return oldBox;
                   }
                   const gridSize = 20;
@@ -395,6 +497,34 @@ export default function CanvasGrid() {
           </Layer>
         </Stage>
       </EditorContextMenu>
+
+      <div className="absolute bottom-6 right-6 flex items-center gap-1 bg-zinc-900/90 border border-zinc-800 p-1 rounded-lg text-white shadow-xl pointer-events-auto z-10">
+        <button
+          onClick={handleZoomOut}
+          className="p-2 hover:bg-zinc-800 rounded-md transition-colors"
+          title="Zoom Out"
+        >
+          <ZoomOut size={16} />
+        </button>
+        <div className="text-xs font-sans w-12 text-center select-none">
+          {Math.round(scale * 100)}%
+        </div>
+        <button
+          onClick={handleZoomIn}
+          className="p-2 hover:bg-zinc-800 rounded-md transition-colors"
+          title="Zoom In"
+        >
+          <ZoomIn size={16} />
+        </button>
+        <div className="w-px h-4 bg-zinc-700 mx-1" />
+        <button
+          onClick={handleResetZoom}
+          className="p-2 hover:bg-zinc-800 rounded-md transition-colors"
+          title="Fit to Screen"
+        >
+          <Maximize size={16} />
+        </button>
+      </div>
     </div>
   );
 }

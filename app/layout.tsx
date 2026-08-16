@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -39,7 +40,9 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full dark flex flex-col overflow-hidden">
-        <main>{children}</main>
+        <TooltipProvider delayDuration={300}>
+          <main>{children}</main>
+        </TooltipProvider>
         <Toaster />
       </body>
     </html>
