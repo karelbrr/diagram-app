@@ -4,6 +4,15 @@
 
 A modern web application for creating, editing, and managing diagrams. Built with Next.js, Zustand, and Konva.
 
+## Tech Stack
+
+- **Core:** Next.js, React, TypeScript
+- **Backend & Auth:** Supabase
+- **Canvas & Drawing:** React Konva
+- **State Management:** Zustand
+- **Styling:** Tailwind CSS, Radix UI, Shadcn UI
+- **Animations:** Framer Motion
+
 ## Features
 
 - Drag-and-drop shapes (rectangles, circles, diamonds)
@@ -16,6 +25,7 @@ A modern web application for creating, editing, and managing diagrams. Built wit
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v18 or newer recommended)
 - npm or yarn
 
@@ -51,7 +61,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 - Move shapes by dragging
 - Resize or rotate selected shapes
 - Delete shapes by dragging them to the trash icon
-
 
 ## License
 
